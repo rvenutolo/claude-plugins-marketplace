@@ -170,12 +170,12 @@ function assert_fails_with() {
 }
 
 @test "manifest-invariants: I10 fails on a zero-width space in a name" {
-  mutate '.plugins[0].name = "alp​ha"'
+  mutate '.plugins[0].name = "alp\u200bha"'
   assert_fails_with 'I10'
 }
 
 @test "manifest-invariants: I10 fails on a bidi control in a description" {
-  mutate '.plugins[0].description = "The first ‮fixture plugin."'
+  mutate '.plugins[0].description = "The first \u202efixture plugin."'
   assert_fails_with 'I10'
 }
 
