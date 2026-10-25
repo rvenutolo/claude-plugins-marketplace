@@ -89,7 +89,12 @@ function check_entry() {
   fi
 
   local listing
-  if ! listing="$(git ls-remote "${REMOTE_BASE}/${repo}" "refs/tags/${ref}" "refs/tags/${ref}^{}" 2> /dev/null)"; then
+  # The remote is read anonymously over the URL as given. User and system git
+  # config are ignored for this command: a `url.<base>.insteadOf` rewrite of
+  # https://github.com/ to SSH makes the read fail wherever ssh is not on PATH,
+  # such as inside the hermetic devShell.
+  if ! listing="$(GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
+    git ls-remote "${REMOTE_BASE}/${repo}" "refs/tags/${ref}" "refs/tags/${ref}^{}" 2> /dev/null)"; then
     fail "${label}" "cannot reach ${repo}"
     return 1
   fi
