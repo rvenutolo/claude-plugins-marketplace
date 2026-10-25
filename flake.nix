@@ -107,7 +107,6 @@
             ]))
             jq
             git
-            gh
             just
             # nix.out, NOT a bare `nix`. This package's default output is `dev`,
             # which has no bin/ at all, so a bare `nix` puts nothing on the

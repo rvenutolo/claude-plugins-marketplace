@@ -86,10 +86,10 @@ function main() {
   log 'running shellcheck'
   if ((${#files[@]} > 0)); then
     # LC_ALL is scoped to shellcheck on purpose. The hermetic devShell sets no
-    # locale, and shellcheck (Haskell) then encodes its output as ASCII and dies
-    # with "commitBuffer: invalid argument" the moment a finding lands on a line
-    # containing an em dash — of which this repo's scripts have many. The
-    # diagnostic is swallowed mid-sentence, so the failure reads as a mystery.
+    # locale, and shellcheck (Haskell) then encodes its output as ASCII: it
+    # dies with "commitBuffer: invalid argument" when a finding lands on a line
+    # containing a non-ASCII character such as an em dash, and the diagnostic
+    # is cut off mid-sentence.
     LC_ALL=C.UTF-8 shellcheck "${files[@]}" || rc=1
   else
     log 'no shell files found — this is a failure, not a clean pass'

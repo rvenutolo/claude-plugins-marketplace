@@ -31,14 +31,14 @@
 #
 #              1. Justification is decided by where a tool RESOLVES ON PATH, not
 #                 by scanning each output's bin/. An output the shell does not
-#                 need is never realised, so a scan asks about directories that
-#                 exist on one machine and not another: `nix` passed locally and
-#                 failed in CI for exactly that reason. Every output is still
-#                 enumerated, because the resolved path must be attributed to
-#                 one of them, and binaries live in `bin`, `out`, etc.
-#              2. `nix eval` caches flake evaluations. A cached result reported
-#                 an inventory three packages stale while the tree on disk had
-#                 already moved. --no-eval-cache is mandatory, not tidiness.
+#                 need is never realised, so a scan would depend on which
+#                 directories exist on the machine running it. Every output is
+#                 still enumerated, because the resolved path must be
+#                 attributed to one of them, and binaries live in `bin`, `out`,
+#                 etc.
+#              2. `nix eval` caches flake evaluations, and a cached result can
+#                 describe a tree that has since changed. --no-eval-cache is
+#                 mandatory, not tidiness.
 #
 #              Real mode must be run INSIDE the devShell (run-all-checks always
 #              is). Fixture mode never asks Nix and needs no devShell.
@@ -344,11 +344,10 @@ function reverse_check() {
   # Where each declared tool ACTUALLY resolves on the devShell's PATH. This is
   # the whole basis of rule 1, and it is deliberately not a scan of every
   # output's bin/: an output that the shell does not need is never realised, so
-  # scanning it asks the filesystem about a directory that exists on the author's
-  # machine and not on a CI runner. That is how `nix` passed locally and failed
-  # in CI -- its bin lives in an output nothing had built there. Resolving
-  # through PATH only ever names paths that exist, and says the thing the lint
-  # actually means: this package puts a tool we use into the shell.
+  # scanning it asks the filesystem about a directory that may not exist on the
+  # machine running the lint. Resolving through PATH only ever names paths that
+  # exist, and says the thing the lint actually means: this package puts a tool
+  # we use into the shell.
   local -a tool_paths=()
   local resolved tool
   for tool in "${tools[@]}"; do

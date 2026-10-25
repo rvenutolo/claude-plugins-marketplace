@@ -1,6 +1,7 @@
-# Tools the repo's own tooling shells out to. Every entry is justified by a real
-# call site. This file is data: one tool per line, blank lines and whole-line
-# `#` comments ignored, no shebang and no executable bit.
+# Tools the repo's own tooling shells out to. The comment above each entry
+# names what uses it; the closing block holds the baseline userland. This file
+# is data: one tool per line, blank lines and whole-line `#` comments ignored,
+# no shebang and no executable bit.
 #
 # A `#` comment on the SAME line as a tool is NOT a free-form note -- it is an
 # annotation the lint reads and validates. Exactly one annotation exists:
@@ -38,11 +39,9 @@ editorconfig-checker
 deadnix
 # invoked by .ci/run-lint-checks
 statix
-# the GitHub CLI, for working with pull requests and the remote repository
-gh
 # every repo-tooling script derives the repo root via `git rev-parse`
 git
-# JSON inspection for the repo's own checks and tests
+# JSON inspection for the manifest checks
 jq
 # the task runner the .justfile documents; .ci/run-lint-checks verifies its
 # formatting with `just --fmt`
