@@ -169,6 +169,11 @@ JSON
   printf '[url "file:///nonexistent/"]\n\tinsteadOf = %s/\n' "file://${BATS_TEST_TMPDIR}/remote" \
     > "${BATS_TEST_TMPDIR}/gitconfig"
   export GIT_CONFIG_GLOBAL="${BATS_TEST_TMPDIR}/gitconfig"
+  # Precondition: the rewrite is in effect, so a plain read of the fixture
+  # remote fails. Without it a rewrite that stopped applying would let this
+  # test pass for the wrong reason.
+  run git ls-remote "${CHECK_PINS_REMOTE_BASE}/acme/widget" refs/tags/v1.0.0
+  assert_failure
   serve_plugin_json "${SHA_LIGHT}" widget 1.0.0
   write_manifest v1.0.0 "${SHA_LIGHT}"
   run --separate-stderr "${CHECK}" "${ROOT}"
