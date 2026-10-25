@@ -7,7 +7,7 @@
   "lockFileMaintenance": { "enabled": true },
   "packageRules": [
     {
-      "description": "Every update type merges unattended, majors included: the required checks (validate, which pins each plugin to a tag and sha, and the README sync check) gate the merge, not a human.",
+      "description": "Every update type merges unattended, majors included. Renovate's automerge waits for every status check on the branch: checks (which runs check-pins and check-readme-sync), commitlint, validate and ci-ok.",
       "matchUpdateTypes": [
         "digest",
         "pin",
