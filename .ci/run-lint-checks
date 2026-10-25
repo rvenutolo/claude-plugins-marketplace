@@ -8,11 +8,13 @@
 #              failing category.
 # @noargs
 # @stderr a `[<script>] <message>` banner before each step, the reason for each
-#         empty file list, each step skipped for want of its input, and a
-#         closing line on a non-zero verdict; the ERR trap's `[<script>] ERROR: ...` report when a command
-#         fails instead
+#         empty file list or missing workflow input, each step skipped for want
+#         of its optional input, and a closing line on a non-zero verdict; the
+#         ERR trap's `[<script>] ERROR: ...` report when a command fails
+#         instead
 # @exitcode 0 every linter passed
-# @exitcode 1 at least one linter failed or a file list came up empty
+# @exitcode 1 at least one linter failed, a file list came up empty, or the
+#             workflow directory is missing
 # @exitcode * otherwise the failing git status, when the repository root cannot
 #             be resolved
 
@@ -129,13 +131,13 @@ function main() {
   fi
 
   log 'running actionlint'
-  # The workflow steps are skipped, loudly, when their input is absent: a tree
-  # without .github/workflows has no workflow for actionlint or zizmor to read,
-  # and failing there would make the gate unsatisfiable.
+  # A missing workflows directory is a failure, not a skip: the repo's CI is
+  # defined there, and a gate that finds nothing to read has looked at nothing.
   if [[ -d "${REPO_DIR}/.github/workflows" ]]; then
     actionlint || rc=1
   else
-    log 'no .github/workflows directory found - skipping actionlint'
+    log 'no .github/workflows directory found - this is a failure, not a clean pass'
+    rc=1
   fi
 
   log 'running zizmor'
@@ -170,7 +172,8 @@ function main() {
   if [[ -d "${REPO_DIR}/.github" ]]; then
     zizmor --no-online-audits --persona=pedantic "${REPO_DIR}/.github/" || rc=1
   else
-    log 'no .github directory found - skipping zizmor'
+    log 'no .github directory found - this is a failure, not a clean pass'
+    rc=1
   fi
 
   log 'running yamllint'

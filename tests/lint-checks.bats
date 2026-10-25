@@ -90,26 +90,27 @@ function gate_in_fixture() {
   [[ "${stderr}" == *'[run-lint-checks] no markdown files found - this is a failure, not a clean pass'* ]]
 }
 
-@test "lint checks: a missing .github/workflows directory skips actionlint, loudly" {
-  # Until a workflow is tracked there is nothing for actionlint to read, so the
-  # step is skipped rather than failed -- and says so.
+@test "lint checks: a missing .github/workflows directory is a failure, not a clean pass" {
+  # The repo's CI is defined in the workflows directory; a gate that finds
+  # nothing there has not checked it.
   printf '# Title\n' > "${FIXTURE}/README.md"
   git -C "${FIXTURE}" add -- 'README.md'
   mv --force -- "${FIXTURE}/.github/workflows" "${BATS_TEST_TMPDIR}/workflows"
   run --separate-stderr gate_in_fixture
-  assert_success
+  assert_failure 1
   assert_output ''
-  [[ "${stderr}" == *'[run-lint-checks] no .github/workflows directory found - skipping actionlint'* ]]
+  [[ "${stderr}" == *'[run-lint-checks] no .github/workflows directory found - this is a failure, not a clean pass'* ]]
 }
 
-@test "lint checks: a missing .github directory skips zizmor and the renovate validator, loudly" {
+@test "lint checks: a missing .github directory fails actionlint and zizmor and skips the renovate validator" {
   printf '# Title\n' > "${FIXTURE}/README.md"
   git -C "${FIXTURE}" add -- 'README.md'
   mv --force -- "${FIXTURE}/.github" "${BATS_TEST_TMPDIR}/github"
   run --separate-stderr gate_in_fixture
-  assert_success
+  assert_failure 1
   assert_output ''
-  [[ "${stderr}" == *'[run-lint-checks] no .github directory found - skipping zizmor'* ]]
+  [[ "${stderr}" == *'[run-lint-checks] no .github/workflows directory found - this is a failure, not a clean pass'* ]]
+  [[ "${stderr}" == *'[run-lint-checks] no .github directory found - this is a failure, not a clean pass'* ]]
   [[ "${stderr}" == *'[run-lint-checks] no .github/renovate.json found - skipping renovate-config-validator'* ]]
 }
 
@@ -120,8 +121,8 @@ function gate_in_fixture() {
   run --separate-stderr gate_in_fixture
   assert_success
   [[ "${stderr}" == *'no .github/renovate.json found - skipping renovate-config-validator'* ]]
-  [[ "${stderr}" != *'skipping zizmor'* ]]
-  [[ "${stderr}" != *'skipping actionlint'* ]]
+  [[ "${stderr}" != *'no .github directory found'* ]]
+  [[ "${stderr}" != *'no .github/workflows directory found'* ]]
 }
 
 @test "lint checks: no tracked Nix file is a failure, not a clean pass" {
