@@ -169,7 +169,7 @@ function main() {
   # bare `.` would descend into the author's untracked docs/superpowers/ tree
   # for the same reason markdownlint and typos take explicit lists below.
   if [[ -d "${REPO_DIR}/.github" ]]; then
-    zizmor --config "${REPO_DIR}/.github/zizmor.yml" --no-online-audits --persona=pedantic "${REPO_DIR}/.github/" || rc=1
+    zizmor --no-online-audits --persona=pedantic "${REPO_DIR}/.github/" || rc=1
   else
     log 'no .github directory found - this is a failure, not a clean pass'
     rc=1

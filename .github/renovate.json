@@ -7,7 +7,7 @@
   "lockFileMaintenance": { "enabled": true },
   "packageRules": [
     {
-      "description": "Every update type merges unattended, majors included. platformAutomerge is off because the branch ruleset requires only the always-green merge-gate check; Renovate itself merges only once every status check on the branch (checks, commitlint, validate, ci-ok) has passed.",
+      "description": "Every update type merges unattended, majors included. GitHub auto-merge waits for the branch ruleset's required ci-ok check, which needs checks, commitlint and validate to pass.",
       "matchUpdateTypes": [
         "digest",
         "pin",
@@ -18,7 +18,6 @@
       ],
       "automerge": true,
       "automergeType": "pr",
-      "platformAutomerge": false,
       "automergeStrategy": "merge-commit"
     }
   ],
