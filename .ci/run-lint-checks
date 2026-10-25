@@ -8,13 +8,12 @@
 #              failing category.
 # @noargs
 # @stderr a `[<script>] <message>` banner before each step, the reason for each
-#         empty file list or missing workflow input, each step skipped for want
-#         of its optional input, and a closing line on a non-zero verdict; the
-#         ERR trap's `[<script>] ERROR: ...` report when a command fails
-#         instead
+#         empty file list or missing input, and a closing line on a non-zero
+#         verdict; the ERR trap's `[<script>] ERROR: ...` report when a command
+#         fails instead
 # @exitcode 0 every linter passed
 # @exitcode 1 at least one linter failed, a file list came up empty, or the
-#             workflow directory is missing
+#             workflow directory or the Renovate config is missing
 # @exitcode * otherwise the failing git status, when the repository root cannot
 #             be resolved
 
@@ -187,11 +186,13 @@ function main() {
   # to the CURRENT directory and, finding none, exits 0 with only a warning --
   # a gate that passes by looking at nothing. Without any of this a malformed
   # config is not a CI failure: Renovate just stops opening dependency PRs.
-  # Skipped, loudly, until a Renovate config is tracked.
+  # A missing config is a failure, not a skip: without it Renovate opens no
+  # PRs, and a gate that finds nothing to read has looked at nothing.
   if [[ -f "${REPO_DIR}/.github/renovate.json" ]]; then
     renovate-config-validator --no-global "${REPO_DIR}/.github/renovate.json" || rc=1
   else
-    log 'no .github/renovate.json found - skipping renovate-config-validator'
+    log 'no .github/renovate.json found - this is a failure, not a clean pass'
+    rc=1
   fi
 
   log 'running markdownlint'

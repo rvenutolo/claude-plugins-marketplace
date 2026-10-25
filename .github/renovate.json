@@ -1,0 +1,47 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits"],
+  "timezone": "America/New_York",
+  "schedule": ["* 4-7 * * *"],
+  "nix": { "enabled": true },
+  "lockFileMaintenance": { "enabled": true },
+  "packageRules": [
+    {
+      "description": "Every update type merges unattended, majors included. Renovate's automerge waits for every status check on the branch: checks (which runs check-pins and check-readme-sync), commitlint, validate and ci-ok.",
+      "matchUpdateTypes": [
+        "digest",
+        "pin",
+        "patch",
+        "minor",
+        "major",
+        "lockFileMaintenance"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "merge-commit"
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "One manager owns both the manifest pin (ref and sha) and the README table row for a plugin, so a single branch carries both edits and the README sync check never sees them split across PRs.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.claude-plugin/marketplace\\.json$/",
+        "/^README\\.md$/"
+      ],
+      "datasourceTemplate": "github-tags",
+      "matchStrings": [
+        "\"repo\": \"(?<depName>[^\"]+)\",\\s*\"ref\": \"(?<currentValue>[^\"]+)\",\\s*\"sha\": \"(?<currentDigest>[0-9a-f]{40})\"",
+        "\\]\\(https://github\\.com/(?<depName>[^)]+)\\) \\| (?<currentValue>v[^ |]+) \\|"
+      ]
+    },
+    {
+      "description": "Pins the Claude Code CLI version that CI installs, from the renovate comment above CLAUDE_CODE_VERSION.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.github/workflows/.+\\.yml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>.+?) depName=(?<depName>.+?)\\s+CLAUDE_CODE_VERSION:\\s*'(?<currentValue>[^']+)'"
+      ]
+    }
+  ]
+}

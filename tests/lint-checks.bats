@@ -102,7 +102,7 @@ function gate_in_fixture() {
   [[ "${stderr}" == *'[run-lint-checks] no .github/workflows directory found - this is a failure, not a clean pass'* ]]
 }
 
-@test "lint checks: a missing .github directory fails actionlint and zizmor and skips the renovate validator" {
+@test "lint checks: a missing .github directory fails actionlint, zizmor and the renovate validator" {
   printf '# Title\n' > "${FIXTURE}/README.md"
   git -C "${FIXTURE}" add -- 'README.md'
   mv --force -- "${FIXTURE}/.github" "${BATS_TEST_TMPDIR}/github"
@@ -111,16 +111,16 @@ function gate_in_fixture() {
   assert_output ''
   [[ "${stderr}" == *'[run-lint-checks] no .github/workflows directory found - this is a failure, not a clean pass'* ]]
   [[ "${stderr}" == *'[run-lint-checks] no .github directory found - this is a failure, not a clean pass'* ]]
-  [[ "${stderr}" == *'[run-lint-checks] no .github/renovate.json found - skipping renovate-config-validator'* ]]
+  [[ "${stderr}" == *'[run-lint-checks] no .github/renovate.json found - this is a failure, not a clean pass'* ]]
 }
 
-@test "lint checks: a missing renovate config alone skips only its validator" {
+@test "lint checks: a missing renovate config alone is a failure" {
   printf '# Title\n' > "${FIXTURE}/README.md"
   git -C "${FIXTURE}" add -- 'README.md'
   mv --force -- "${FIXTURE}/.github/renovate.json" "${BATS_TEST_TMPDIR}/renovate.json"
   run --separate-stderr gate_in_fixture
-  assert_success
-  [[ "${stderr}" == *'no .github/renovate.json found - skipping renovate-config-validator'* ]]
+  assert_failure 1
+  [[ "${stderr}" == *'no .github/renovate.json found - this is a failure, not a clean pass'* ]]
   [[ "${stderr}" != *'no .github directory found'* ]]
   [[ "${stderr}" != *'no .github/workflows directory found'* ]]
 }
