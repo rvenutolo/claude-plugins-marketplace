@@ -162,6 +162,20 @@ JSON
   [[ "${stderr}" != *'not valid JSON'* ]]
 }
 
+@test "pins: ignores url rewrites in the user's git config" {
+  # test_helper/common points GIT_CONFIG_GLOBAL at /dev/null; this test swaps in
+  # a config that rewrites the fixture remote to an unreachable URL, so the
+  # check only passes when it ignores user config.
+  printf '[url "file:///nonexistent/"]\n\tinsteadOf = %s/\n' "${CHECK_PINS_REMOTE_BASE}" \
+    > "${BATS_TEST_TMPDIR}/gitconfig"
+  export GIT_CONFIG_GLOBAL="${BATS_TEST_TMPDIR}/gitconfig"
+  serve_plugin_json "${SHA_LIGHT}" widget 1.0.0
+  write_manifest v1.0.0 "${SHA_LIGHT}"
+  run --separate-stderr "${CHECK}" "${ROOT}"
+  assert_success
+  [[ "${stderr}" == *'OK:'* ]]
+}
+
 @test "pins: reports an unfetchable plugin.json as FAIL" {
   write_manifest v1.0.0 "${SHA_LIGHT}"
   run --separate-stderr "${CHECK}" "${ROOT}"
