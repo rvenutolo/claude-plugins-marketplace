@@ -138,3 +138,23 @@ JSON
   assert_failure 2
   [[ "${stderr}" == *'usage:'* ]]
 }
+
+@test "pins: reports invalid plugin.json as FAIL not a crash" {
+  mkdir --parents "${RAW}/acme/widget/${SHA_LIGHT}/.claude-plugin"
+  printf 'not json at all\n' > "${RAW}/acme/widget/${SHA_LIGHT}/.claude-plugin/plugin.json"
+  write_manifest v1.0.0 "${SHA_LIGHT}"
+  run --separate-stderr "${CHECK}" "${ROOT}"
+  assert_failure 1
+  [[ "${stderr}" == *'FAIL: widget:'* ]]
+  [[ "${stderr}" == *'not valid JSON'* ]]
+  [[ "${stderr}" != *'ERROR:'* ]]
+  [[ "${stderr}" != *'parse error'* ]]
+}
+
+@test "pins: reports an unfetchable plugin.json as FAIL" {
+  write_manifest v1.0.0 "${SHA_LIGHT}"
+  run --separate-stderr "${CHECK}" "${ROOT}"
+  assert_failure 1
+  [[ "${stderr}" == *'FAIL: widget:'* ]]
+  [[ "${stderr}" != *'ERROR:'* ]]
+}
