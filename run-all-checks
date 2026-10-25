@@ -35,11 +35,13 @@ readonly REPO_DIR
 # and shebang to what the lint gate assumes. check-uses-sha-pinned requires
 # every workflow `uses:` to be a commit SHA with a version comment. check-pins
 # verifies each catalogue entry's pin against its remote tag and plugin.json,
-# and so needs network access.
+# and so needs network access. check-readme-sync holds the README plugin table
+# to the manifest.
 readonly GOVERNANCE_CHECKS=(
   'check-devshell-provides'
   'check-executable-bit'
   'check-pins'
+  'check-readme-sync'
   'check-shell-shebangs'
   'check-uses-sha-pinned'
 )
