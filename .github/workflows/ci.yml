@@ -76,11 +76,11 @@ jobs:
           persist-credentials: false
       - uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed  # v6.2.1
 
-  merge-gate:
-    name: merge-gate
-    # The one check the main-branch ruleset requires. Every other job feeds it
-    # through `needs`, so jobs can be added, split or renamed here without
-    # editing the ruleset.
+  ci-ok:
+    name: ci-ok
+    # Aggregates every other job: each one feeds it through `needs`, so jobs
+    # can be added, split or renamed here without editing any ruleset that
+    # requires this check.
     #
     # always(): without it a failed or cancelled dependency would skip this
     # job, and a skipped required check counts as passing.

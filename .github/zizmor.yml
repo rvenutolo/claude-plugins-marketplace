@@ -1,0 +1,8 @@
+# merge-gate.yml is managed externally and must stay byte-identical.
+rules:
+  anonymous-definition:
+    ignore:
+      - merge-gate.yml
+  concurrency-limits:
+    ignore:
+      - merge-gate.yml
