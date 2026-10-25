@@ -118,8 +118,13 @@ function check_entry() {
     fail "${label}" "cannot fetch .claude-plugin/plugin.json at ${sha} from ${repo}"
     return 1
   fi
-  if ! jq --exit-status 'type == "object"' <<< "${plugin_json}" &> /dev/null; then
+  local plugin_type
+  if ! plugin_type="$(jq --raw-output 'type' <<< "${plugin_json}" 2> /dev/null)"; then
     fail "${label}" ".claude-plugin/plugin.json at ${sha} in ${repo} is not valid JSON"
+    return 1
+  fi
+  if [[ "${plugin_type}" != 'object' ]]; then
+    fail "${label}" ".claude-plugin/plugin.json at ${sha} in ${repo} is not a JSON object"
     return 1
   fi
   plugin_name="$(jq --raw-output '.name // ""' <<< "${plugin_json}")"

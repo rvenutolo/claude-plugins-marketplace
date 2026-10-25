@@ -71,8 +71,7 @@ function main() {
 
   if ! jq --exit-status '.plugins | type == "array"' "${manifest}" &> /dev/null; then
     fail 'marketplace.json' "cannot read a plugins array from ${manifest}"
-    verdict_failed
-    return
+    verdict_failed || return 1
   fi
   local -a names=() expected=() found=()
   mapfile -t names < <(jq --raw-output '.plugins[].name' "${manifest}")
@@ -81,8 +80,7 @@ function main() {
     "${manifest}")
   if [[ ! -r "${readme}" ]]; then
     fail 'README.md' "cannot read ${readme}"
-    verdict_failed
-    return
+    verdict_failed || return 1
   fi
 
   local line in_table=0 seen_start=0 seen_end=0 seen_header=0 seen_separator=0
@@ -108,8 +106,7 @@ function main() {
 
   if ((seen_start == 0 || seen_end == 0)); then
     fail 'README.md' "needs the markers ${START_MARKER} and ${END_MARKER}, in that order"
-    verdict_failed
-    return
+    verdict_failed || return 1
   fi
 
   local rc=0 index

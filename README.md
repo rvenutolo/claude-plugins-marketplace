@@ -8,6 +8,7 @@ one to a release tag and the commit that tag points at.
 ## Plugins
 
 <!-- plugins:start -->
+<!-- The table is single-space cells under the prettier-ignore marker below, so a version of a different length does not make the formatter rewrite it. -->
 <!-- prettier-ignore -->
 | Plugin | Version | Description |
 | --- | --- | --- |
@@ -62,8 +63,5 @@ claude plugin marketplace remove rvenutolo
 `./run-all-checks` runs the whole gate: formatting, the governance checks, the
 lints and the test suite. The governance checks include `.ci/check-pins`, which
 verifies every pin against its remote tag and so needs network access, and
-`.ci/check-readme-sync`, which holds the plugin table to the manifest. `just
-check` is a shortcut for it.
-
-The plugin table sits directly under `<!-- prettier-ignore -->` with single-space cells,
-so a version of a different length does not make the formatter rewrite it.
+`.ci/check-readme-sync`, which holds the plugin table to the manifest. The
+shortcut for the whole gate is `just check`.

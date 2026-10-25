@@ -151,6 +151,17 @@ JSON
   [[ "${stderr}" != *'parse error'* ]]
 }
 
+@test "pins: reports a non-object plugin.json as not a JSON object" {
+  mkdir --parents "${RAW}/acme/widget/${SHA_LIGHT}/.claude-plugin"
+  printf '[]\n' > "${RAW}/acme/widget/${SHA_LIGHT}/.claude-plugin/plugin.json"
+  write_manifest v1.0.0 "${SHA_LIGHT}"
+  run --separate-stderr "${CHECK}" "${ROOT}"
+  assert_failure 1
+  [[ "${stderr}" == *'FAIL: widget:'* ]]
+  [[ "${stderr}" == *'is not a JSON object'* ]]
+  [[ "${stderr}" != *'not valid JSON'* ]]
+}
+
 @test "pins: reports an unfetchable plugin.json as FAIL" {
   write_manifest v1.0.0 "${SHA_LIGHT}"
   run --separate-stderr "${CHECK}" "${ROOT}"
