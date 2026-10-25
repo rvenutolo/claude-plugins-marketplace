@@ -166,7 +166,7 @@ JSON
   # test_helper/common points GIT_CONFIG_GLOBAL at /dev/null; this test swaps in
   # a config that rewrites the fixture remote to an unreachable URL, so the
   # check only passes when it ignores user config.
-  printf '[url "file:///nonexistent/"]\n\tinsteadOf = %s/\n' "${CHECK_PINS_REMOTE_BASE}" \
+  printf '[url "file:///nonexistent/"]\n\tinsteadOf = %s/\n' "file://${BATS_TEST_TMPDIR}/remote" \
     > "${BATS_TEST_TMPDIR}/gitconfig"
   export GIT_CONFIG_GLOBAL="${BATS_TEST_TMPDIR}/gitconfig"
   serve_plugin_json "${SHA_LIGHT}" widget 1.0.0
