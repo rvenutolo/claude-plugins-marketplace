@@ -33,10 +33,13 @@ readonly REPO_DIR
 # check-devshell-provides keeps .ci/required-tools and the devShell in step.
 # check-executable-bit and check-shell-shebangs hold every tracked file's mode
 # and shebang to what the lint gate assumes. check-uses-sha-pinned requires
-# every workflow `uses:` to be a commit SHA with a version comment.
+# every workflow `uses:` to be a commit SHA with a version comment. check-pins
+# verifies each catalogue entry's pin against its remote tag and plugin.json,
+# and so needs network access.
 readonly GOVERNANCE_CHECKS=(
   'check-devshell-provides'
   'check-executable-bit'
+  'check-pins'
   'check-shell-shebangs'
   'check-uses-sha-pinned'
 )

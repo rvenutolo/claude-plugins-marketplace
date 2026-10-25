@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+
+# @description Verify every plugin entry in the marketplace manifest is pinned
+#              to a real release. For each entry: the source is an object with
+#              `source` "github" and non-empty `repo`, `ref` and `sha`; the
+#              `ref` tag resolves on the remote to the pinned `sha` (the peeled
+#              commit for an annotated tag, never the tag object); and the
+#              plugin.json at that sha names the entry and carries the version
+#              the tag spells.
+#
+#              CHECK_PINS_REMOTE_BASE (default https://github.com) and
+#              CHECK_PINS_RAW_BASE (default https://raw.githubusercontent.com)
+#              replace the two hosts, so tests can serve fixtures from disk.
+# @arg $1 root optional repository root holding .claude-plugin/marketplace.json;
+#         defaults to the repository root of the working directory
+# @stderr one FAIL line per violation naming the entry and the values that
+#         disagree, an OK line per verified entry, the usage line on exit 2;
+#         the ERR trap's `[<script>] ERROR: ...` report when a command fails
+#         instead
+# @exitcode 0 every entry is pinned correctly
+# @exitcode 1 at least one violation, an unreadable manifest, or an
+#             unreachable remote
+# @exitcode 2 more than one argument
+# @exitcode * otherwise the failing git status, when the repository root cannot
+#             be resolved
+
+set -Eeuo pipefail
+shopt -s inherit_errexit
+IFS=$'\n\t'
+
+trap 'printf "[%s] ERROR: line %s (exit %s): %s\n" "${0##*/}" "${LINENO}" "$?" "${BASH_COMMAND}" >&2' ERR
+
+readonly REMOTE_BASE="${CHECK_PINS_REMOTE_BASE:-https://github.com}"
+readonly RAW_BASE="${CHECK_PINS_RAW_BASE:-https://raw.githubusercontent.com}"
+
+# @description Print the usage line and exit 2. Exit 2 rather than 1: 1 is the
+#              check's verdict, and "you called it wrong" must stay
+#              distinguishable from it.
+# @noargs
+# @stderr the usage line
+# @exitcode 2 always
+function usage() {
+  printf 'usage: %s [root]\n' "${0##*/}" >&2
+  trap - ERR
+  exit 2
+}
+
+# @description Print one FAIL line.
+# @arg $1 entry the plugin entry name
+# @arg $2 message what is wrong, naming the values that disagree
+# @stderr the FAIL line
+function fail() {
+  printf 'FAIL: %s: %s\n' "$1" "$2" >&2
+}
+
+# @description Read one string field of one manifest entry; empty when the
+#              field is absent or not a string.
+# @arg $1 manifest path of marketplace.json
+# @arg $2 index the entry's position in .plugins
+# @arg $3 path a jq path expression relative to the entry, such as .source.ref
+# @stdout the field's value, or nothing
+function entry_field() {
+  jq --raw-output --argjson index "$2" "(.plugins[\$index] | try ($3 | strings) catch \"\") // \"\"" "$1"
+}
+
+# @description Check one manifest entry.
+# @arg $1 manifest path of marketplace.json
+# @arg $2 index the entry's position in .plugins
+# @stderr FAIL lines for violations, an OK line otherwise
+# @exitcode 0 the entry is pinned correctly
+# @exitcode 1 at least one violation
+function check_entry() {
+  local -r manifest="$1" index="$2"
+  local name kind repo ref sha
+  name="$(entry_field "${manifest}" "${index}" '.name')"
+  kind="$(entry_field "${manifest}" "${index}" '.source.source')"
+  repo="$(entry_field "${manifest}" "${index}" '.source.repo')"
+  ref="$(entry_field "${manifest}" "${index}" '.source.ref')"
+  sha="$(entry_field "${manifest}" "${index}" '.source.sha')"
+  local -r label="${name:-#${index}}"
+
+  if [[ -z "${kind}" || -z "${repo}" || -z "${ref}" || -z "${sha}" ]]; then
+    fail "${label}" "source must be an object with source, repo, ref and sha (got source=${kind:-<missing>} repo=${repo:-<missing>} ref=${ref:-<missing>} sha=${sha:-<missing>})"
+    return 1
+  fi
+  if [[ "${kind}" != 'github' ]]; then
+    fail "${label}" "source.source must be github (got ${kind})"
+    return 1
+  fi
+
+  local listing
+  if ! listing="$(git ls-remote "${REMOTE_BASE}/${repo}" "refs/tags/${ref}" "refs/tags/${ref}^{}" 2> /dev/null)"; then
+    fail "${label}" "cannot reach ${repo}"
+    return 1
+  fi
+  # The peeled line is the commit an annotated tag points at; a lightweight tag
+  # has only the plain line, which already is the commit.
+  local resolved='' plain='' line_sha line_ref
+  while read -r line_sha line_ref; do
+    case "${line_ref}" in
+      "refs/tags/${ref}^{}") resolved="${line_sha}" ;;
+      "refs/tags/${ref}") plain="${line_sha}" ;;
+    esac
+  done <<< "${listing}"
+  resolved="${resolved:-${plain}}"
+  if [[ -z "${resolved}" ]]; then
+    fail "${label}" "tag ${ref} does not exist in ${repo}"
+    return 1
+  fi
+  if [[ "${resolved}" != "${sha}" ]]; then
+    fail "${label}" "sha ${sha} is not the commit tag ${ref} resolves to (${resolved})"
+    return 1
+  fi
+
+  local plugin_json plugin_name plugin_version rc=0
+  if ! plugin_json="$(curl --fail --silent --show-error --location \
+    "${RAW_BASE}/${repo}/${sha}/.claude-plugin/plugin.json" 2> /dev/null)"; then
+    fail "${label}" "cannot fetch .claude-plugin/plugin.json at ${sha} from ${repo}"
+    return 1
+  fi
+  plugin_name="$(jq --raw-output '.name // ""' <<< "${plugin_json}")"
+  plugin_version="$(jq --raw-output '.version // ""' <<< "${plugin_json}")"
+  if [[ "${plugin_name}" != "${name}" ]]; then
+    fail "${label}" "plugin.json name ${plugin_name:-<missing>} differs from entry name ${name}"
+    rc=1
+  fi
+  if [[ "v${plugin_version}" != "${ref}" ]]; then
+    fail "${label}" "plugin.json version ${plugin_version:-<missing>} does not match ref ${ref}"
+    rc=1
+  fi
+  if ((rc == 0)); then
+    printf 'OK: %s: %s pinned to %s at %s\n' "${label}" "${repo}" "${ref}" "${sha}" >&2
+  fi
+  return "${rc}"
+}
+
+function main() {
+  if (($# > 1)); then
+    usage
+  fi
+  local root
+  root="${1:-$(git rev-parse --show-toplevel)}"
+  local -r manifest="${root}/.claude-plugin/marketplace.json"
+
+  local rc=0 count index
+  if ! count="$(jq --raw-output '.plugins | length' "${manifest}" 2> /dev/null)"; then
+    printf 'FAIL: cannot read a plugins array from %s\n' "${manifest}" >&2
+    trap - ERR
+    return 1
+  fi
+  for ((index = 0; index < count; index++)); do
+    check_entry "${manifest}" "${index}" || rc=1
+  done
+  # A check reporting its own verdict is not a crash: drop the ERR trap so the
+  # diagnostics above are the last thing the reader sees.
+  trap - ERR
+  return "${rc}"
+}
+
+main "$@"

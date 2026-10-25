@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "rvenutolo",
+  "owner": {
+    "name": "Rick Venutolo",
+    "url": "https://github.com/rvenutolo"
+  },
+  "metadata": {
+    "description": "Rick Venutolo's Claude Code plugins"
+  },
+  "plugins": [
+    {
+      "name": "pgrep-pkill-guard",
+      "source": {
+        "source": "github",
+        "repo": "rvenutolo/claude-pgrep-pkill-guard",
+        "ref": "v1.2.0",
+        "sha": "57987d5b68be8702f06e2b0aecb21e7c9b6e4813"
+      },
+      "description": "Blocks pgrep/pkill commands that match the agent's own process or poll in a loop.",
+      "category": "security",
+      "homepage": "https://github.com/rvenutolo/claude-pgrep-pkill-guard",
+      "author": {
+        "name": "Rick Venutolo",
+        "url": "https://github.com/rvenutolo"
+      },
+      "keywords": ["hook", "safety", "pgrep", "pkill"]
+    }
+  ]
+}
