@@ -35,8 +35,8 @@
 #              `plugins` array.
 #
 #              All rules run in one jq program: the character-class checks
-#              cannot be done portably in shell, since `grep -P` is not
-#              guaranteed on macOS, where the gate also runs.
+#              cannot be done portably in shell: a contributor may run the gate
+#              on macOS, where `grep -P` is not guaranteed.
 # @arg $1 root optional repository root holding .claude-plugin/marketplace.json;
 #         defaults to the repository root of the working directory
 # @stderr one `FAIL: <message>` line per violated invariant or unreadable
