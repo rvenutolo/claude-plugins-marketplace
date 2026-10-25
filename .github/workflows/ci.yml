@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-      # `$/` waits on actionlint support; this job runs its own commit, so `./` is the same tree.
+      # This job runs its own commit, so the local `./` action is the same tree as the repository's action.
       - uses: ./.github/actions/setup  # zizmor: ignore[self-repository]
       - name: Run all checks
         # The interpreter is the flake's bash, not the host's: .ci/in-devshell
