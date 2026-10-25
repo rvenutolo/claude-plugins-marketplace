@@ -39,6 +39,8 @@ editorconfig-checker
 deadnix
 # invoked by .ci/run-lint-checks
 statix
+# fetches each pinned plugin's plugin.json in .ci/check-pins
+curl
 # every repo-tooling script derives the repo root via `git rev-parse`
 git
 # JSON inspection for the manifest checks

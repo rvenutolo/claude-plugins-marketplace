@@ -106,6 +106,7 @@
               }))
             ]))
             jq
+            curl
             git
             just
             # nix.out, NOT a bare `nix`. This package's default output is `dev`,
