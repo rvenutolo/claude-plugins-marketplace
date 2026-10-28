@@ -33,7 +33,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2  # v2.22.2
+      - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43  # v2.22.3
         with:
           # TODO: restore egress-policy block once block mode stops dropping allowed hosts on
           # westus2 runners: https://github.com/step-security/harden-runner/issues/708
@@ -65,7 +65,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2  # v2.22.2
+      - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43  # v2.22.3
         with:
           # TODO: restore egress-policy block once block mode stops dropping allowed hosts on
           # westus2 runners: https://github.com/step-security/harden-runner/issues/708
@@ -104,7 +104,7 @@ jobs:
       DISABLE_ERROR_REPORTING: '1'
       DISABLE_TELEMETRY: '1'
     steps:
-      - uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2  # v2.22.2
+      - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43  # v2.22.3
         with:
           # TODO: restore egress-policy block once block mode stops dropping allowed hosts on
           # westus2 runners: https://github.com/step-security/harden-runner/issues/708
@@ -159,7 +159,7 @@ jobs:
     env:
       NEEDS_JSON: ${{ toJSON(needs) }}
     steps:
-      - uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2  # v2.22.2
+      - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43  # v2.22.3
         with:
           # TODO: restore egress-policy block once block mode stops dropping allowed hosts on
           # westus2 runners: https://github.com/step-security/harden-runner/issues/708
