@@ -73,3 +73,19 @@ function lint() {
   assert_success
   assert_output --partial 'footer must have leading blank line'
 }
+
+# A copy of the config sits under a directory whose node_modules holds a fake
+# preset with a header pattern nothing matches. Loading that preset would turn
+# every subject into a missing type, so a pass means the config loaded the
+# preset the running commitlint bundles.
+@test "ignores a preset in a node_modules above the config" {
+  local fixture="${BATS_TEST_TMPDIR}/shadow"
+  local fake="${fixture}/node_modules/conventional-changelog-conventionalcommits"
+  mkdir --parents "${fixture}/repo" "${fake}"
+  cp "${REPO_DIR}/commitlint.config.mjs" "${fixture}/repo/"
+  printf '{"name":"conventional-changelog-conventionalcommits","main":"index.js"}\n' > "${fake}/package.json"
+  printf 'module.exports = { default: () => ({ parser: { headerPattern: /^never$/ } }) };\n' > "${fake}/index.js"
+
+  run commitlint --cwd "${fixture}/repo" <<< 'feat: add a flag'
+  assert_success
+}
