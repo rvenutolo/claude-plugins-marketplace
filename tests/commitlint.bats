@@ -1,8 +1,7 @@
-# commitlint.config.mjs, through the devShell commitlint the commit-msg hook runs.
-# The CI commitlint job runs the version bundled in its action, which these
-# tests do not cover. Each test feeds one commit message on stdin and asserts
-# the verdict. `--cwd` pins config discovery to the repo root, so the test sees
-# the repo's config no matter where bats runs from.
+# commitlint.config.mjs, through the devShell commitlint that the commit-msg
+# hook and the CI commitlint job both run. Each test feeds one commit message
+# on stdin and asserts the verdict. `--cwd` pins config discovery to the repo
+# root, so the test sees the repo's config no matter where bats runs from.
 
 function setup() {
   load 'test_helper/common'
