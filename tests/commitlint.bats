@@ -52,11 +52,13 @@ function lint() {
 }
 
 # Without the issuePrefixes override, `#12` opens a footer and
-# footer-leading-blank warns; the message still passes, so assert on the warning.
+# footer-leading-blank warns; the message still passes. commitlint prints
+# nothing for a message with no problems and no warnings, so any footer rule
+# that fires fails the test.
 @test "does not read a mid-paragraph issue reference as a footer" {
   lint $'fix: handle an empty list\n\nThe parser mishandled this.\nSee #12 for the report on it.'
   assert_success
-  refute_output --partial 'footer-leading-blank'
+  assert_output ''
 }
 
 # footer-leading-blank is a warning in config-conventional, so the message
