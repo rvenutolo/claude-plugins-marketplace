@@ -2,6 +2,17 @@ extends:
   - '@commitlint/config-conventional'
 parserPreset:
   parserOpts:
+    # Setting parserOpts replaces the whole parser preset config-conventional
+    # brings in (conventional-changelog-conventionalcommits), not just the keys
+    # given here. The preset's options are spelled out below so the parser keeps
+    # them; without headerPattern it falls back to a default with no `!?`, and
+    # a breaking-change subject such as `feat!: x` loses its type and subject.
+    headerPattern: '^(\w*)(?:\((.*)\))?!?: (.*)$'
+    breakingHeaderPattern: '^(\w*)(?:\((.*)\))?!: (.*)$'
+    headerCorrespondence: [type, scope, subject]
+    noteKeywords: ['BREAKING CHANGE', 'BREAKING-CHANGE']
+    revertPattern: '^(?:Revert|revert:)\s"?([\s\S]+?)"?\s*This reverts commit (\w*)\.'
+    revertCorrespondence: [header, hash]
     # The parser reads any `#N` followed by more text, on a body line after the
     # first, as an issue reference that opens the footer, so a body that cites
     # an issue mid-paragraph trips footer-leading-blank. A prefix no commit
