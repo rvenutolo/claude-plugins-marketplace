@@ -1,8 +1,10 @@
-# .commitlintrc.yml, through the devShell commitlint the commit-msg hook runs.
-# The CI commitlint job runs the version bundled in its action, which these
-# tests do not cover. Each test feeds one commit message on stdin and asserts
-# the verdict. `--cwd` pins config discovery to the repo root, so the test sees
-# the repo's config no matter where bats runs from.
+# commitlint.config.mjs, through the devShell commitlint that the commit-msg
+# hook and the CI checks job both run. Each test feeds one commit message
+# on stdin and asserts the verdict. `--cwd` pins config discovery to the repo
+# root, so the test sees the repo's config no matter where bats runs from.
+
+# `run --separate-stderr` is a bats 1.5.0 flag.
+bats_require_minimum_version 1.5.0
 
 function setup() {
   load 'test_helper/common'
@@ -52,11 +54,14 @@ function lint() {
 }
 
 # Without the issuePrefixes override, `#12` opens a footer and
-# footer-leading-blank warns; the message still passes, so assert on the warning.
+# footer-leading-blank warns; the message still passes. commitlint prints
+# its report on stdout, and nothing for a message with no problems and no
+# warnings, so any footer rule that fires fails the test. stderr is kept apart
+# so a Node or dependency warning there cannot fail it.
 @test "does not read a mid-paragraph issue reference as a footer" {
-  lint $'fix: handle an empty list\n\nThe parser mishandled this.\nSee #12 for the report on it.'
+  run --separate-stderr commitlint --cwd "${REPO_DIR}" <<< $'fix: handle an empty list\n\nThe parser mishandled this.\nSee #12 for the report on it.'
   assert_success
-  refute_output --partial 'footer-leading-blank'
+  assert_output ''
 }
 
 # footer-leading-blank is a warning in config-conventional, so the message
@@ -71,4 +76,20 @@ function lint() {
   lint $'feat: drop a flag\n\nThe flag is gone.\nBREAKING-CHANGE: the flag is gone'
   assert_success
   assert_output --partial 'footer must have leading blank line'
+}
+
+# A copy of the config sits under a directory whose node_modules holds a fake
+# preset with a header pattern nothing matches. Loading that preset would turn
+# every subject into a missing type, so a pass means the config loaded the
+# preset the running commitlint bundles.
+@test "ignores a preset in a node_modules above the config" {
+  local fixture="${BATS_TEST_TMPDIR}/shadow"
+  local fake="${fixture}/node_modules/conventional-changelog-conventionalcommits"
+  mkdir --parents "${fixture}/repo" "${fake}"
+  cp "${REPO_DIR}/commitlint.config.mjs" "${fixture}/repo/"
+  printf '{"name":"conventional-changelog-conventionalcommits","main":"index.js"}\n' > "${fake}/package.json"
+  printf 'module.exports = { default: () => ({ parser: { headerPattern: /^never$/ } }) };\n' > "${fake}/index.js"
+
+  run commitlint --cwd "${fixture}/repo" <<< 'feat: add a flag'
+  assert_success
 }

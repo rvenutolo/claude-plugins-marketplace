@@ -42,6 +42,9 @@ jobs:
             nixos.org:443 objects.githubusercontent.com:443 raw.githubusercontent.com:443 releases.nixos.org:443 tarballs.nixos.org:443
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          # Full history: the commitlint step below lints every commit between
+          # the pull request's base and head.
+          fetch-depth: 0
           persist-credentials: false
       # This job runs its own commit, so the local `./` action is the same tree as the repository's action.
       - uses: ./.github/actions/setup  # zizmor: ignore[self-repository]
@@ -52,29 +55,22 @@ jobs:
         # `shopt -s inherit_errexit`, which a bash older than 4.4 lacks.
         shell: nix develop --command bash -e {0}
         run: ./.ci/in-devshell ./run-all-checks
-
-  commitlint:
-    name: commitlint
-    # pull_request ONLY: default merge-commit subjects ("Merge pull request #1
-    # ...") are not conventional and would redden main on the first merge.
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43  # v2.22.3
-        with:
-          egress-policy: block
-          disable-sudo: true
-          allowed-endpoints: >-
-            api.github.com:443 auth.docker.io:443 codeload.github.com:443 github.com:443 objects.githubusercontent.com:443
-            production.cloudflare.docker.com:443 registry-1.docker.io:443
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed  # v6.2.1
+      - name: Lint the pull request's commits
+        # pull_request ONLY: default merge-commit subjects ("Merge pull request
+        # #1 ...") are not conventional and would redden main on the first
+        # merge.
+        #
+        # The devShell's commitlint, the one the commit-msg hook and
+        # tests/commitlint.bats run, so CI cannot judge a message differently;
+        # commitlint.config.mjs also resolves its preset through that
+        # commitlint's NODE_PATH. A step here rather than its own job, so it
+        # shares this job's Nix setup, sudo and egress allowlist.
+        if: github.event_name == 'pull_request'
+        shell: nix develop --command bash -e {0}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: ./.ci/in-devshell commitlint --from "${BASE_SHA}" --to "${HEAD_SHA}" --verbose
 
   validate:
     name: validate
@@ -145,7 +141,6 @@ jobs:
     if: always()
     needs:
       - checks
-      - commitlint
       - validate
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -160,9 +155,7 @@ jobs:
           # No network calls: the job only inspects its own `needs` context.
           allowed-endpoints: ''
       - name: Require every needed job to have succeeded
-        # commitlint is pull_request-only, so `skipped` is its normal result on
-        # a push. Any other skipped job, and every cancelled or failed one,
-        # fails the check.
+        # A skipped job, and every cancelled or failed one, fails the check.
         run: |
           set -Eeuo pipefail
           # Assigned on its own line, not read through process substitution:
@@ -173,7 +166,7 @@ jobs:
           while IFS=$'\t' read -r job result; do
             printf '%s: %s\n' "${job}" "${result}"
             case "${job}:${result}" in
-              *:success | commitlint:skipped) ;;
+              *:success) ;;
               *) failed=1 ;;
             esac
           done <<< "${results}"
