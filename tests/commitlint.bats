@@ -1,5 +1,6 @@
-# .commitlintrc.yml, through the same commitlint the commit-msg hook and the CI
-# commitlint job run. Each test feeds one commit message on stdin and asserts
+# .commitlintrc.yml, through the devShell commitlint the commit-msg hook runs.
+# The CI commitlint job runs the version bundled in its action, which these
+# tests do not cover. Each test feeds one commit message on stdin and asserts
 # the verdict. `--cwd` pins config discovery to the repo root, so the test sees
 # the repo's config no matter where bats runs from.
 
@@ -62,6 +63,12 @@ function lint() {
 # passes; the test pins that the rule still sees the footer.
 @test "warns on a BREAKING CHANGE footer with no blank line above it" {
   lint $'feat: drop a flag\n\nThe flag is gone.\nBREAKING CHANGE: the flag is gone'
+  assert_success
+  assert_output --partial 'footer must have leading blank line'
+}
+
+@test "warns on a BREAKING-CHANGE footer with no blank line above it" {
+  lint $'feat: drop a flag\n\nThe flag is gone.\nBREAKING-CHANGE: the flag is gone'
   assert_success
   assert_output --partial 'footer must have leading blank line'
 }
