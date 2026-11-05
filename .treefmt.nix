@@ -13,6 +13,7 @@
       includes = [
         "*.json"
         "*.md"
+        "*.mjs"
       ];
     };
     yamlfmt.enable = true;

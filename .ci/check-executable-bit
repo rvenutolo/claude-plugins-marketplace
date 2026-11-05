@@ -67,6 +67,7 @@ readonly EXPECT_NON_EXECUTABLE=(
   'tests/**/*.bash'
   '*.json'
   '*.md'
+  '*.mjs'
   '*.nix'
   '*.toml'
   '*.yml'

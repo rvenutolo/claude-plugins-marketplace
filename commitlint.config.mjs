@@ -1,5 +1,5 @@
-import { createRequire } from 'node:module';
-import { delimiter } from 'node:path';
+import { createRequire } from "node:module";
+import { delimiter } from "node:path";
 
 // The preset is loaded here, not named in parserPreset, so its parser options
 // can be built with issuePrefixes overridden. A parserPreset.parserOpts object
@@ -15,16 +15,21 @@ import { delimiter } from 'node:path';
 // against something else.
 const NODE_PATH = process.env.NODE_PATH;
 if (!NODE_PATH) {
-  throw new Error('commitlint.config.mjs: NODE_PATH is unset; run the devShell commitlint');
+  throw new Error(
+    "commitlint.config.mjs: NODE_PATH is unset; run the devShell commitlint",
+  );
 }
 const require = createRequire(import.meta.url);
-const presetPath = require.resolve('conventional-changelog-conventionalcommits', {
-  paths: NODE_PATH.split(delimiter),
-});
+const presetPath = require.resolve(
+  "conventional-changelog-conventionalcommits",
+  {
+    paths: NODE_PATH.split(delimiter),
+  },
+);
 const createPreset = require(presetPath).default;
 
 export default {
-  extends: ['@commitlint/config-conventional'],
+  extends: ["@commitlint/config-conventional"],
   parserPreset: {
     // The parser reads any `#N` followed by more text, on a body line after
     // the first, as an issue reference that opens the footer, so a body that
@@ -32,11 +37,11 @@ export default {
     // commit ever writes turns reference parsing off. An empty list would be
     // simpler but also stops the rule catching a real `BREAKING CHANGE:`
     // footer with no blank line above it; this form keeps that.
-    parserOpts: createPreset({ issuePrefixes: ['#ref-never-used-'] }).parser,
+    parserOpts: createPreset({ issuePrefixes: ["#ref-never-used-"] }).parser,
   },
   rules: {
     // Bodies routinely carry long paths, URLs and code fences that cannot be
     // wrapped at 100 chars. Subject-length checks remain in effect.
-    'body-max-line-length': [0, 'always', Infinity],
+    "body-max-line-length": [0, "always", Infinity],
   },
 };

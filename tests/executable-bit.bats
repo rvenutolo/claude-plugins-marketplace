@@ -26,6 +26,7 @@ readonly -a FIXTURE_NON_EXECUTABLE=(
   'tests/test_helper/thing.bash'
   'package.json'
   'README.md'
+  'thing.mjs'
   'flake.nix'
   'thing.toml'
   'thing.yml'
