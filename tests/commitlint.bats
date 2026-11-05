@@ -3,6 +3,9 @@
 # on stdin and asserts the verdict. `--cwd` pins config discovery to the repo
 # root, so the test sees the repo's config no matter where bats runs from.
 
+# `run --separate-stderr` is a bats 1.5.0 flag.
+bats_require_minimum_version 1.5.0
+
 function setup() {
   load 'test_helper/common'
 }
@@ -52,10 +55,11 @@ function lint() {
 
 # Without the issuePrefixes override, `#12` opens a footer and
 # footer-leading-blank warns; the message still passes. commitlint prints
-# nothing for a message with no problems and no warnings, so any footer rule
-# that fires fails the test.
+# its report on stdout, and nothing for a message with no problems and no
+# warnings, so any footer rule that fires fails the test. stderr is kept apart
+# so a Node or dependency warning there cannot fail it.
 @test "does not read a mid-paragraph issue reference as a footer" {
-  lint $'fix: handle an empty list\n\nThe parser mishandled this.\nSee #12 for the report on it.'
+  run --separate-stderr commitlint --cwd "${REPO_DIR}" <<< $'fix: handle an empty list\n\nThe parser mishandled this.\nSee #12 for the report on it.'
   assert_success
   assert_output ''
 }
