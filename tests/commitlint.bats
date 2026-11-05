@@ -1,5 +1,5 @@
 # commitlint.config.mjs, through the devShell commitlint that the commit-msg
-# hook and the CI commitlint job both run. Each test feeds one commit message
+# hook and the CI checks job both run. Each test feeds one commit message
 # on stdin and asserts the verdict. `--cwd` pins config discovery to the repo
 # root, so the test sees the repo's config no matter where bats runs from.
 
