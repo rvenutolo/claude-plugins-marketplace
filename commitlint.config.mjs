@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module';
+import { delimiter } from 'node:path';
 
 // The preset is loaded here, not named in parserPreset, so its parser options
 // can be built with issuePrefixes overridden. A parserPreset.parserOpts object
@@ -6,13 +7,21 @@ import { createRequire } from 'node:module';
 // from a function, which the config merge replaces wholesale, leaving the
 // parser on a default header pattern with no `!?` that rejects `feat!: x`.
 //
-// `require`, not `import`: the module resolves through NODE_PATH, which the
-// nix commitlint wrapper points at its own node_modules, and ESM resolution
-// ignores NODE_PATH. The preset is then always the one the running commitlint
-// bundles. If a commitlint without that NODE_PATH runs this file, the require
-// throws instead of linting against something else.
+// The preset is resolved from NODE_PATH only, which the nix commitlint wrapper
+// points at its own node_modules, so it is always the one the running
+// commitlint bundles. A plain require would search every node_modules above
+// this file first, and a stray copy there would silently win. Without
+// NODE_PATH, or without the preset in it, this throws instead of linting
+// against something else.
+const NODE_PATH = process.env.NODE_PATH;
+if (!NODE_PATH) {
+  throw new Error('commitlint.config.mjs: NODE_PATH is unset; run the devShell commitlint');
+}
 const require = createRequire(import.meta.url);
-const createPreset = require('conventional-changelog-conventionalcommits').default;
+const presetPath = require.resolve('conventional-changelog-conventionalcommits', {
+  paths: NODE_PATH.split(delimiter),
+});
+const createPreset = require(presetPath).default;
 
 export default {
   extends: ['@commitlint/config-conventional'],
